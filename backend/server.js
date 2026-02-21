@@ -17,6 +17,13 @@ app.use("/api", require("./routes/test.routes"));
 app.use("/api", require("./routes/upload.routes"));
 app.use("/api", require("./routes/share.routes"));
 app.use("/", require("./routes/view.routes"));
+app.use(express.json());
+app.use("/api", require("./routes/delete.routes"));
+const updateRoutes = require("./routes/update.routes");
+
+app.use("/api", updateRoutes);
+
+
 
 // Health check
 app.get("/", (req, res) => {

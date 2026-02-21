@@ -16,7 +16,8 @@ connectDB();
 // CREATE BOT
 // =======================
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-
+// Store documents waiting for manual naming
+const pendingDocs = {};
 // =======================
 // /start
 // =======================
@@ -37,6 +38,21 @@ bot.on("text", async (ctx) => {
   try {
     const message = ctx.message.text;
     const userId = `telegram_${ctx.from.id}`;
+    // If user is naming an unknown document
+if (pendingDocs[userId]) {
+  const documentId = pendingDocs[userId];
+
+  await axios.post("http://localhost:5000/api/update-doc-type", {
+    documentId,
+    docType: message.toLowerCase()
+  });
+
+  delete pendingDocs[userId];
+
+  return ctx.reply(
+    `✅ Document saved as ${message.toUpperCase()} successfully.`
+  );
+}
 
     const intent = await detectIntent(message);
 
@@ -44,7 +60,8 @@ bot.on("text", async (ctx) => {
     // LIST DOCUMENTS
     // -------------------
     if (intent.intent === "LIST_DOCS") {
-      const docs = await Document.find({ userId });
+      const docs = await Document.find({ userId, deleted: false });
+
 
       if (!docs.length) {
         return ctx.reply("📭 You have no documents yet.");
@@ -64,9 +81,11 @@ bot.on("text", async (ctx) => {
       const { docType, expirySeconds } = intent;
 
       const doc = await Document.findOne({
-        userId,
-        docType
-      });
+  userId,
+  deleted: false,
+  docType: { $regex: docType, $options: "i" }
+});
+
 
       if (!doc) {
         return ctx.reply(`❌ I couldn't find your ${docType}.`);
@@ -90,6 +109,30 @@ bot.on("text", async (ctx) => {
 );
 
     }
+
+// DELETE DOCUMENT
+if (intent.intent === "DELETE_DOCUMENT") {
+  const { docType } = intent;
+  const userId = `telegram_${ctx.from.id}`;
+
+  const doc = await Document.findOne({
+    userId,
+    docType: { $regex: docType, $options: "i" }
+  });
+
+  if (!doc) {
+    return ctx.reply(`❌ I couldn't find your ${docType}.`);
+  }
+
+  await axios.post("http://localhost:5000/api/delete", {
+    documentId: doc._id,
+    userId
+  });
+
+  return ctx.reply(`🗑️ ${docType.toUpperCase()} deleted successfully.`);
+}
+
+
 
     // -------------------
     // FALLBACK
@@ -135,13 +178,29 @@ bot.on("document", async (ctx) => {
     form.append("file", fs.createReadStream(tempPath));
     form.append("userId", userId);
 
-    await axios.post(
+   const uploadRes = await axios.post(
       "http://localhost:5000/api/upload",
       form,
       { headers: form.getHeaders() }
     );
 
     fs.unlinkSync(tempPath);
+    const { documentId, docType } = uploadRes.data;
+
+    // If AI detected properly
+if (docType && docType !== "unknown") {
+  return ctx.reply(
+    `✅ ${docType.toUpperCase()} detected and stored securely.`
+  );
+}
+
+// If AI failed → ask user
+pendingDocs[userId] = documentId;
+
+return ctx.reply(
+  "🤔 I couldn't identify this document.\n" +
+  "Please tell me the document name."
+);
 
     ctx.reply("✅ Document uploaded and stored securely.");
 

@@ -12,18 +12,44 @@ async function detectIntent(message) {
           role: "system",
           content: `
 You are an intent detection agent.
-Return ONLY valid JSON. No text.
+Return ONLY valid JSON. No extra text.
 
 Possible intents:
 - LIST_DOCS
 - SHARE_DOCUMENT
+- DELETE_DOCUMENT
 - UNKNOWN
 
-If sharing, extract:
-- docType (resume, aadhaar, certificate, pan, etc.)
-- expirySeconds (number)
+Rules:
+1. If user asks to list/show documents → LIST_DOCS
+2. If user asks to share a document → SHARE_DOCUMENT
+3. If user asks to delete/remove a document → DELETE_DOCUMENT
 
-If listing, just return intent.
+If intent = SHARE_DOCUMENT:
+Return:
+{
+  "intent": "SHARE_DOCUMENT",
+  "docType": "resume | aadhaar | pan | certificate | unknown",
+  "expirySeconds": number
+}
+
+If intent = DELETE_DOCUMENT:
+Return:
+{
+  "intent": "DELETE_DOCUMENT",
+  "docType": "resume | aadhaar | pan | certificate | unknown"
+}
+
+If intent = LIST_DOCS:
+Return:
+{
+  "intent": "LIST_DOCS"
+}
+
+If unsure:
+{
+  "intent": "UNKNOWN"
+}
 `
         },
         {
