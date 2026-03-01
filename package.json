@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "qrcode": "^1.5.4",
     "stellar-sdk": "^13.3.0"
   }
 }

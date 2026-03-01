@@ -5,6 +5,7 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const FormData = require("form-data");
+const QRCode= require("qrcode")
 
 const connectDB = require("./db/mongo");
 const detectIntent = require("./agent/intentAgent");
@@ -53,6 +54,34 @@ if (pendingDocs[userId]) {
     `✅ Document saved as ${message.toUpperCase()} successfully.`
   );
 }
+const lowerMsg = message.toLowerCase();
+
+// Friendly greetings
+if (
+  lowerMsg.includes("hi") ||
+  lowerMsg.includes("hello") ||
+  lowerMsg.includes("hey") ||
+  lowerMsg.includes("good morning") ||
+  lowerMsg.includes("good evening")
+) {
+  return ctx.reply(
+    "👋 Hello! I'm TrustAgent.\n\n" +
+    "What would you like to do today?\n\n" +
+    "📤 Upload a document\n" +
+    "📂 Show my documents\n" +
+    "🔐 Share a document"
+  );
+}
+if (lowerMsg.includes("what can you do")) {
+  return ctx.reply(
+    "🤖 I can help you:\n\n" +
+    "• Upload documents securely\n" +
+    "• Detect document type using AI\n" +
+    "• Store files on IPFS\n" +
+    "• Anchor proof on blockchain\n" +
+    "• Generate secure share links"
+  );
+}
 
     const intent = await detectIntent(message);
 
@@ -98,8 +127,9 @@ if (pendingDocs[userId]) {
           seconds: expirySeconds || 30
         }
       );
+      
 
-      return ctx.reply(
+return ctx.reply(
   `🔐 <b>Secure link</b> (valid for ${expirySeconds || 30}s):\n\n` +
   `<a href="${response.data.shareLink}">${response.data.shareLink}</a>`,
   {
@@ -107,6 +137,7 @@ if (pendingDocs[userId]) {
     disable_web_page_preview: true
   }
 );
+
 
     }
 
