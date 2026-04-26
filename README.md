@@ -1,18 +1,3 @@
-Ahhh I see what happened 😄
-You pasted the README directly and it lost proper Markdown formatting on GitHub.
-
-No worries — I’ll give you:
-
-1. ✅ Properly formatted README (clean Markdown)
-2. ✅ Exact Git commands to update it
-3. ✅ Safe push command
-
----
-
-# ✅ Step 1 — Replace Your README.md With Proper Markdown
-
-Open your `README.md` and replace everything with this clean version:
-
 ```markdown
 # 📄 TrustAgent – AI-Based Secure Document Sharing System
 
